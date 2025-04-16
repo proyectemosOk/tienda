@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Orden de Entrada</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h1>Formulario de Orden de Entrada</h1>
+    <form action="/submit" method="post" enctype="multipart/form-data">
+        <label>Nombre: <input type="text" name="nombre" required></label><br>
+        <label>Teléfono: <input type="text" name="telefono" required></label><br>
+        <label>Correo: <input type="email" name="correo" required></label><br>
+
+        <label>Tipo:
+            <select name="tipo">
+                <option value="PC">PC</option>
+                <option value="Portátil">Portátil</option>
+                <option value="Impresora">Impresora</option>
+            </select>
+        </label><br>
+
+        <label>Marca: <input type="text" name="marca"></label><br>
+        <label>Modelo: <input type="text" name="modelo"></label><br>
+        <label>Estado de Entrada: <textarea name="estado_entrada"></textarea></label><br>
+
+        <fieldset>
+            <legend>Servicios</legend>
+            <label><input type="checkbox" name="servicios" value="Mantenimiento"> Mantenimiento</label>
+            <label><input type="checkbox" name="servicios" value="Actualización"> Actualización</label>
+            <label><input type="checkbox" name="servicios" value="Reparación"> Reparación</label>
+            <label><input type="checkbox" name="servicios" value="Actualizar Hardware"> Actualizar Hardware</label>
+        </fieldset>
+
+        <label>Periféricos que deja: <input type="text" name="perifericos"></label><br>
+        <label>Observaciones: <textarea name="observaciones"></textarea></label><br>
+        <label>Subir Fotos: <input type="file" name="fotos" multiple></label><br><br>
+
+        <button type="submit">Enviar Orden</button>
+    </form>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -49,12 +49,13 @@ class TicketDeVenta:
         
         self.cliente_combo = ctk.CTkComboBox(
             self.header_frame, 
+            width=15,
             values=self.obtener_clientes(), 
             corner_radius=50, 
             font=("Arial", 25),
             justify="left"
         )
-        self.cliente_combo.pack(side="left", padx=10, pady=10, fill="x", expand=True)
+        self.cliente_combo.pack(side="left", padx=10, pady=10, expand=True, fill="x")
         self.cliente_combo.set("")  # Valor inicial vacío
 
         # Agregar un evento para actualizar la lista mientras se escribe

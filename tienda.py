@@ -59,8 +59,8 @@ class InterfazPrincipal:
         self.frame_ticket = tk.Frame(self.frame_pedido,bg="white")
         # Opcional: Establecer tamaño fijo
         self.frame_ticket.pack_propagate(False)
-        frame_productos.configure(width=self.ancho_pantalla*0.7)
-        self.frame_ticket.configure(width=self.ancho_pantalla*0.3)
+        frame_productos.configure(width=self.ancho_pantalla*0.78)
+        self.frame_ticket.configure(width=self.ancho_pantalla*0.22)
         frame_productos.pack(side="left", expand=True, fill="both")
         self.frame_ticket.pack(side="right", fill="y")
 
@@ -141,6 +141,7 @@ class InterfazPrincipal:
 
     def cerrar_dia(self):
         CerrarDia(self.master,self.db)
+    
     def entrega_diaria(self):
         EntregaDiaria(self.master,self.db)
     
