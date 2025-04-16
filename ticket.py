@@ -195,7 +195,7 @@ class TicketDeVenta:
             'id': item.id,
             'nombre': item.nombre,
             'cantidad': item.cantidad,
-            'precio': item.precio,
+            'precio': item.precio_actual,
             'total_precio': item.total_precio
         })
             
@@ -203,7 +203,7 @@ class TicketDeVenta:
                 "venta_id": venta_id,
                 "producto_id": item.id,
                 "cantidad": item.cantidad,
-                "precio_unitario": item.precio
+                "precio_unitario": item.precio_actual
             })
             
             nuevo_stock = int(item.stock) - int(item.cantidad)

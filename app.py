@@ -13,6 +13,7 @@ firebase = ServicioFirebase("../proyectemosok-31150-firebase-adminsdk-fbsvc-fdae
 @app.route('/')
 def index():
     return render_template('orden.html')
+
 @app.route('/orden')
 def orden():
     return render_template('orden.html')

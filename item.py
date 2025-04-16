@@ -98,10 +98,11 @@ class Item:
     def actualizar_precio(self, event=None):
         """Actualiza el precio cuando se modifica manualmente"""
         try:
-            nuevo_precio = int(self.precio_var.get())
+            nuevo_precio = float(self.precio_var.get())
             self.precio_actual = nuevo_precio
             self.actualizar_cantidad()
-        except ValueError:
+        except ValueError as e:
+            print(e)
             self.precio_var.set(str(self.precio_actual))
 
     def manejar_cambio_entrada(self, event=None):
