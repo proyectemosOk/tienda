@@ -6,10 +6,11 @@ from datetime import datetime
 from cargar_iconos import cargar_iconos
 from PIL import Image, ImageTk
 import os
-import shutil
+
 from tkinter import simpledialog
-import time
-class GestorProductos(ctk.CTkToplevel):
+
+import random
+class GestorProductos(tk.Toplevel):
     def __init__(self, parent_frame, actulizar_productos, usuario):
         super().__init__(parent_frame)
         self.actulizar_productos = actulizar_productos
@@ -75,6 +76,7 @@ class GestorProductos(ctk.CTkToplevel):
                 print(f"Unidad '{unidad}' con símbolo '{simbolo}' agregada.")
             else:
                 print(f"Unidad '{unidad}' no se agregó porque no se proporcionó un símbolo.")
+        self._cargar()
 
     def on_closing(self):
         self.attributes("-topmost", False)
@@ -128,16 +130,21 @@ class GestorProductos(ctk.CTkToplevel):
         self.precio_venta_entry.grid(row=1, column=3, padx=5, pady=(2, 3))
         
         # Categoría (ComboBox)
-        categorias  = [cat[0] for cat in self.db.seleccionar("categorias", "categoria")] 
-        ctk.CTkLabel(self.form_frame, text="Categoría:", font=font_label).grid(row=2, column=0, padx=5, pady=(2, 3))
-        self.categoria_combobox = ctk.CTkComboBox(self.form_frame, values =categorias)
+        ctk.CTkLabel(self.form_frame, text="Categoria:", font=font_label).grid(row=2, column=0, padx=5, pady=(2, 3))
+        self.categoria_combobox = ctk.CTkComboBox(self.form_frame, values=[])
         self.categoria_combobox.grid(row=2, column=1, padx=5, pady=(2, 3))
+        # Evento para desplegar al presionar flecha abajo
+        self.categoria_combobox.bind("<Down>", lambda e: self.categoria_combobox.event_generate("<Button-1>"))
+
         
         # Unidad (ComboBox)
-        unidades = [cat[0] for cat in self.db.seleccionar("unidades", "unidad")]
         ctk.CTkLabel(self.form_frame, text="Unidad:", font=font_label).grid(row=2, column=2, padx=5, pady=(2, 3))
-        self.unidad_combobox = ctk.CTkComboBox(self.form_frame, values =unidades)
+        self.unidad_combobox = ctk.CTkComboBox(self.form_frame, values=[])
         self.unidad_combobox.grid(row=2, column=3, padx=5, pady=(2, 3))
+        # Evento para desplegar la lista al presionar ↓
+        self.unidad_combobox.bind("<Down>", self._desplegar_combobox)
+
+        self._cargar()
         
         # Descripción
         ctk.CTkLabel(self.form_frame, text="Descripción:", font=font_label).grid(row=1, column=4, padx=5, pady=(2, 3),sticky = "w")
@@ -187,6 +194,11 @@ class GestorProductos(ctk.CTkToplevel):
             hover_color="#455A64"
         )
         self.limpiar_btn.pack(side="left", padx=5)
+    def _desplegar_combobox(self, event):
+        print("hola")
+        widget = event.widget
+        widget.focus_set()
+        widget.event_generate("<Button-1>")  # Simula clic para desplegar
 
     def _crear_tabla(self):
         # Crear Treeview
@@ -224,14 +236,26 @@ class GestorProductos(ctk.CTkToplevel):
         # Insertar productos en la tabla
         for producto in productos:
             self.tabla.insert('', 'end', values=producto)
-
+    
+    def _cargar(self):
+        self._cargar_categorias()
+        self._cargar_unidades()
+    
     def _cargar_categorias(self):
         categorias = self.db.seleccionar("categorias", "categoria")
-        self.categoria_combobox['values'] = [cat[0] for cat in categorias]
+        lista_categorias = [cat[0] for cat in categorias]
+        self.categoria_combobox.configure(values=lista_categorias)
+
+        if lista_categorias:
+            self.categoria_combobox.set(lista_categorias[0])  # Opcional: valor por defecto
         
     def _cargar_unidades(self):
         unidades = self.db.seleccionar("unidades", "unidad")
-        self.unidad_combobox['values'] = [unidad[0] for unidad in unidades]
+        lista_unidades = [unidad[0] for unidad in unidades]
+        self.unidad_combobox.configure(values=lista_unidades)
+
+        if lista_unidades:
+            self.unidad_combobox.set(lista_unidades[2])  # Valor por defecto opcional
 
     def seleccionar_producto(self, event):
         # Obtener el item seleccionado
@@ -437,10 +461,14 @@ class GestorProductos(ctk.CTkToplevel):
             existente = self.db.seleccionar("productos", "codigo", "codigo = ?", self.codigo_entry.get())
             if len(existente) > 0:
                 raise ValueError("Codigo ya Registrado")
-
+            if self.codigo_entry.get().strip() == "":
+                codigo_barras = self.generar_codigo_barras()
+            else:
+                codigo_barras =  self.codigo_entry.get().strip()
+                
             # Obtener valores de los campos, dejando vacíos los opcionales
             datos = {
-                "codigo": self.codigo_entry.get().strip(),
+                "codigo": codigo_barras,
                 "nombre": self.nombre_entry.get().strip(),
                 "descripcion": self.descripcion_entry.get("1.0", "end-1c").strip() if self.descripcion_entry.get("1.0", "end-1c").strip() else "",
                 "precio_compra": float(self.precio_compra_entry.get()) if self.precio_compra_entry.get().strip() else "",
@@ -451,7 +479,7 @@ class GestorProductos(ctk.CTkToplevel):
             }
 
             # Verificar campos obligatorios
-            if not all([datos["codigo"],  datos["nombre"], datos["categoria"], datos["precio_compra"], datos["precio_venta"], datos["unidad"]]):
+            if not all([datos["nombre"], datos["categoria"], datos["precio_compra"], datos["precio_venta"], datos["unidad"]]):
                 messagebox.showerror("Error", "Complete los campos obligatorios")
                 raise ValueError("Complete los campos obligatorios")
 
@@ -594,6 +622,16 @@ class GestorProductos(ctk.CTkToplevel):
         self.categoria_combobox.set("")
         self.unidad_combobox.set("")
 
+    def generar_codigo_barras(self):
+        """
+        Genera un código único con prefijo 'JJ', fecha y un número aleatorio.
+        Verifica que no exista ya en la base de datos local.
+        """
+        while True:
+            codigo = "JJ" + datetime.now().strftime("%y%m%d%H%M%S%f") + str(random.randint(100, 999))
+            
+            if not self.db.existe_registro("productos", "codigo", codigo):
+                return codigo
 if __name__ == "__main__":
     
     root = ctk.CTk()

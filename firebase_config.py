@@ -1,10 +1,12 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 
+
 class ServicioFirebase:
     def __init__(self, ruta_credenciales: str):
-        self.cred = credentials.Certificate(ruta_credenciales)
-        firebase_admin.initialize_app(self.cred)
+        if not firebase_admin._apps:
+            cred = credentials.Certificate(ruta_credenciales)
+            firebase_admin.initialize_app(cred)
         self.db = firestore.client()
 
     def crear_orden(self, orden_data: dict) -> str:

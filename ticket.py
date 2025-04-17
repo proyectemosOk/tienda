@@ -208,8 +208,8 @@ class TicketDeVenta:
             
             nuevo_stock = int(item.stock) - int(item.cantidad)
             
-            #self.db.actualizar("productos",{"stock": nuevo_stock},"id = ?",(int(item.id),))
-            self.db.ejecutar_consulta(f"UPDATE productos SET stock = {nuevo_stock} WHERE codigo = {item.id}")
+            self.db.actualizar("productos",{"stock": nuevo_stock},"id = ?",(int(item.id),))
+            # self.db.ejecutar_consulta(f"UPDATE productos SET stock = {nuevo_stock} WHERE codigo = {item.id}")
 
             total_compra += self.registrar_lotes(venta_id,item.id,int(item.cantidad))
             

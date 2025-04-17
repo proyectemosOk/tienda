@@ -9,7 +9,7 @@ class VistaProductos:
         self.ver_frame_productos = ver_frame_productos
         self.img_productos = img_productos
         self.producto = producto
-
+        print(self.producto)
         # Colores y estilos
         self.colors = {
             "fondo": "#FFFFFF",

@@ -1,11 +1,12 @@
 import sqlite3
-
+from firebase_config import *
 class ConexionBase:
     def __init__(self, nombre_bd):
         """
         Inicializa la conexión a la base de datos.
         """
         self.nombre_bd = nombre_bd
+        self.firebase = ServicioFirebase("../proyectemosok-31150-firebase-adminsdk-fbsvc-fdae62578b.json")
 
     def conectar(self):
         """
@@ -16,18 +17,26 @@ class ConexionBase:
     def ejecutar_consulta(self, consulta, parametros=()):
         """
         Ejecuta una consulta genérica en la base de datos.
+        Retorna el ID generado si es un INSERT, o None en otros casos.
         """
         conexion = self.conectar()
         cursor = conexion.cursor()
-        
         try:
             cursor.execute(consulta, parametros)
             conexion.commit()
+            
+            # Detectamos si es una inserción y devolvemos el ID
+            if consulta.strip().upper().startswith("INSERT"):
+                return cursor.lastrowid
+            else:
+                return None
+
         except sqlite3.Error as e:
-            print(f"Error al ejecutar la consulta: {e}")
+            print(f"❌ Error al ejecutar la consulta: {e}")
             return None
         finally:
             conexion.close()
+
 
     def insertar(self, tabla, datos):
         """
@@ -42,7 +51,14 @@ class ConexionBase:
         placeholders = ", ".join("?" for _ in datos)
 
         consulta = f"INSERT INTO {tabla} ({columnas}) VALUES ({placeholders})"
-        self.ejecutar_consulta(consulta, valores)
+        id_generado = self.ejecutar_consulta(consulta, valores)
+        # --- Subir a Firebase si corresponde ---
+        if self.firebase and id_generado:
+            datos_con_id = datos.copy()
+            datos_con_id["id"] = id_generado
+            self.firebase.db.collection(tabla).document(str(id_generado)).set(datos_con_id)
+            print(f"🔥 Documento '{id_generado}' insertado en colección '{tabla}' de Firebase.")
+
     
     def existe_registro(self, tabla, columna, valor):
         resultado = self.seleccionar(tabla, columnas=columna, condicion=f"{columna} = ?", parametros=(valor,))
@@ -72,16 +88,23 @@ class ConexionBase:
 
     def actualizar(self, tabla, datos, condicion, parametros_condicion):
         """
-        Actualiza datos en la tabla.
-        tabla: str - Nombre de la tabla.
-        datos: dict - Diccionario con los nombres de columnas y nuevos valores.
-        condicion: str - Condición WHERE.
-        parametros_condicion: tuple - Parámetros para la condición.
+        Actualiza datos en la tabla local y sincroniza con Firebase si corresponde.
         """
         asignaciones = ", ".join(f"{col} = ?" for col in datos.keys())
         valores = tuple(datos.values())
         consulta = f"UPDATE {tabla} SET {asignaciones} WHERE {condicion}"
         self.ejecutar_consulta(consulta, valores + parametros_condicion)
+
+        # --- Sincronizar con Firebase ---
+        if self.firebase:
+            # Suponemos que la condición es algo como: "id = ?"
+            # y que el primer parámetro en parametros_condicion es el ID del documento
+            doc_id = str(parametros_condicion[0])
+            try:
+                self.firebase.db.collection(tabla).document(doc_id).update(datos)
+                print(f"🔁 Documento '{doc_id}' actualizado en colección '{tabla}' de Firebase.")
+            except Exception as e:
+                print(f"❌ Error al actualizar en Firebase: {e}")
 
     def eliminar(self, tabla, condicion, parametros=()):
         """
@@ -134,3 +157,13 @@ class ConexionBase:
         finally:
             conexion.commit()
             conexion.close()
+
+    def existe_registro(self, tabla, columna, valor):
+        """
+        Verifica si existe un registro en la tabla, usando el método ejecutar_personalizado.
+        Retorna True si existe al menos un resultado.
+        """
+        consulta = f"SELECT 1 FROM {tabla} WHERE {columna} = ? LIMIT 1"
+        resultado = self.ejecutar_personalizado(consulta, (valor,))
+        return bool(resultado)
+

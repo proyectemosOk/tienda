@@ -168,7 +168,7 @@ class InterfazPrincipal:
     def actulizar_productos(self, event=None):
         self.img_productos = cargar_iconos("img_productos")
         buscar = self.codigo_producto_entry_buscar.get()
-        lista = self.db.seleccionar("productos", "codigo, nombre, precio_venta, stock, descripcion, id", "stock > 0")
+        lista = self.db.seleccionar("productos", "id, nombre, precio_venta, stock, descripcion, id", "stock > 0")
         print(buscar)
         if buscar != "":
             # Obtiene todos los productos de la base de datos
