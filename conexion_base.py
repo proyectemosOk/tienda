@@ -43,6 +43,7 @@ class ConexionBase:
 
         consulta = f"INSERT INTO {tabla} ({columnas}) VALUES ({placeholders})"
         self.ejecutar_consulta(consulta, valores)
+    
     def existe_registro(self, tabla, columna, valor):
         resultado = self.seleccionar(tabla, columnas=columna, condicion=f"{columna} = ?", parametros=(valor,))
         return len(resultado) > 0

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import os
 from werkzeug.utils import secure_filename
 from firebase_config import ServicioFirebase
@@ -36,6 +36,17 @@ def submit():
     orden_id = firebase.crear_orden(orden.a_dict())
     print(f"Orden creada con ID: {orden_id}")
     return redirect(url_for('index'))
+
+@app.route('/api/tipos')
+def api_tipos():
+    tipos = firebase.db.collection("tipos").stream()
+    return jsonify([doc.to_dict() for doc in tipos])
+
+@app.route('/api/servicios')
+def api_servicios():
+    servicios = firebase.db.collection("servicios").stream()
+    print(servicios)
+    return jsonify([doc.to_dict() for doc in servicios])
 
 
 if __name__ == '__main__':

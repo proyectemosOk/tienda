@@ -13,11 +13,7 @@
         <label>Correo: <input type="email" name="correo" required></label><br>
 
         <label>Tipo:
-            <select name="tipo">
-                <option value="PC">PC</option>
-                <option value="Portátil">Portátil</option>
-                <option value="Impresora">Impresora</option>
-            </select>
+            <select name="tipo" id="tipo-select" required></select>
         </label><br>
 
         <label>Marca: <input type="text" name="marca"></label><br>
@@ -26,10 +22,7 @@
 
         <fieldset>
             <legend>Servicios</legend>
-            <label><input type="checkbox" name="servicios" value="Mantenimiento"> Mantenimiento</label>
-            <label><input type="checkbox" name="servicios" value="Actualización"> Actualización</label>
-            <label><input type="checkbox" name="servicios" value="Reparación"> Reparación</label>
-            <label><input type="checkbox" name="servicios" value="Actualizar Hardware"> Actualizar Hardware</label>
+            <div id="servicios-checkboxes"></div>
         </fieldset>
 
         <label>Periféricos que deja: <input type="text" name="perifericos"></label><br>
@@ -38,6 +31,7 @@
 
         <button type="submit">Enviar Orden</button>
     </form>
+
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
