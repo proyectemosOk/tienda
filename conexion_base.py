@@ -32,7 +32,7 @@ class ConexionBase:
                 return None
 
         except sqlite3.Error as e:
-            print(f"❌ Error al ejecutar la consulta: {e}")
+            print(f"❌ Error al ejecutar la consulta: \n{consulta}\n{e}")
             return None
         finally:
             conexion.close()
@@ -104,7 +104,7 @@ class ConexionBase:
                 self.firebase.db.collection(tabla).document(doc_id).update(datos)
                 print(f"🔁 Documento '{doc_id}' actualizado en colección '{tabla}' de Firebase.")
             except Exception as e:
-                print(f"❌ Error al actualizar en Firebase: {e}")
+                print(f"❌ Error al actualizar en Firebase: {tabla}: {e}")
 
     def eliminar(self, tabla, condicion, parametros=()):
         """

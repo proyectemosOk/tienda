@@ -1,6 +1,7 @@
 import sqlite3
 import random
 from datetime import datetime, timedelta
+from firebase_config import ServicioFirebase
 # Función para conectar a la base de datos
 def conectar_bd(nombre_bd):
     return sqlite3.connect(nombre_bd)
@@ -348,11 +349,108 @@ def crear_tablas():
             faltante INTEGER DEFAULT 0
         )
     """)
+    
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS ordenes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT,
+        telefono TEXT,
+        correo TEXT,
+        tipo TEXT,
+        marca TEXT,
+        modelo TEXT,
+        estado_entrada TEXT,
+        servicios TEXT,
+        perifericos TEXT,
+        observaciones TEXT,
+        fecha TEXT,
+        tipo_pago TEXT,
+        pago REAL,
+        estado INTEGER
+    )""")
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS servicios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT UNIQUE NOT NULL
+        )
+    """)
+    
+    # Servicios por defecto
+    servicios = [
+        (1, "Mantenimiento"),
+        (2, "Reparación"),
+        (3, "Actualización"),
+        (4, "Actualizar Hardware")
+    ]
+
+    # Insertar los servicios si no existen
+    cursor.executemany(
+        "INSERT OR IGNORE INTO servicios (id, nombre) VALUES (?, ?)",
+        servicios
+    )
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS tipos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT UNIQUE NOT NULL
+        )
+    """)
+    tipos_default = [
+    (1, 'PC'),
+    (2, 'Portátil'),
+    (3, 'Impresora'),
+    (4, 'Cámara'),
+    (5, 'DVR')
+]
+
+    cursor.executemany("INSERT OR IGNORE INTO tipos (id, nombre) VALUES (?, ?)", tipos_default)
+
+
     # Confirmar los cambios y cerrar la conexión
     conexion.commit()
     conexion.close()
 
-    
+
+# Ruta a tu archivo de credenciales Firebase
+firebase = ServicioFirebase("../proyectemosok-31150-firebase-adminsdk-fbsvc-fdae62578b.json")
+
+# Subir tipos a Firebase
+tipos = [
+    {"id": 1, "nombre": "PC"},
+    {"id": 2, "nombre": "Portátil"},
+    {"id": 3, "nombre": "Impresora"},
+    {"id": 4, "nombre": "Cámara"},
+    {"id": 5, "nombre": "DVR"}
+]
+for tipo in tipos:
+    doc_ref = firebase.db.collection("tipos").document(str(tipo["id"]))
+    if not doc_ref.get().exists:
+        doc_ref.set(tipo)
+
+# Subir servicios a Firebase
+servicios = [
+    {"id": 1, "nombre": "Mantenimiento"},
+    {"id": 2, "nombre": "Reparación"},
+    {"id": 3, "nombre": "Actualización"},
+    {"id": 4, "nombre": "Actualizar Hardware"}
+]
+for servicio in servicios:
+    doc_ref = firebase.db.collection("servicios").document(str(servicio["id"]))
+    if not doc_ref.get().exists:
+        doc_ref.set(servicio)
+
+# Subir tipos de pago
+tipos_pago = [
+    {"id": 1, "nombre": "EFECTIVO", "descripcion": "Pago en efectivo"},
+    {"id": 2, "nombre": "TRANSFERENCIA", "descripcion": "Transferencia bancaria"},
+    {"id": 3, "nombre": "TARGETA", "descripcion": "Pago con tarjeta de débito"}
+]
+for pago in tipos_pago:
+    doc_ref = firebase.db.collection("tipos_pago").document(str(pago["id"]))
+    if not doc_ref.get().exists:
+        doc_ref.set(pago)
+
 if __name__ == "__main__":
     crear_tablas()
     print("Tablas creadas exitosamente.")

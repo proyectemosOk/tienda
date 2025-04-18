@@ -94,15 +94,15 @@ class InterfazPrincipal:
             lista = self.lista_productos_ver[0:50]
         else:
             lista = self.lista_productos_ver
-        print(len(lista))
-        inicio = time.time()
+        
+        
         for i, producto in enumerate(lista):
             # Calcular posición en la cuadrícula
             fila = int(i) // 5
             columna = int(i) % 5
             x = VistaProductos(self.ver_frame_productos, producto, self.img_productos, self.ticket)
             x.frame_producto.grid(row=fila, column=columna, padx=10, pady=5,ipadx=2, ipady =3, sticky="nesw")
-        print(f"Tiempo transcurrido: {time.time() - inicio:.2f} segundos")
+        
                     
     def limpiar_frame(self, frame):
         # Destruye todos los widgets hijos del frame

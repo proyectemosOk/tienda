@@ -21,6 +21,7 @@ class CerrarDia(tk.Toplevel):
             ORDER BY v.id, p.metodo_pago
         """
         ventas_y_pagos = self.db.ejecutar_personalizado(consulta)
+        print(ventas_y_pagos)
         if ventas_y_pagos == []:
             messagebox.showerror("Día vacío", "No se pudieron obtener los datos.")
             return
@@ -49,6 +50,7 @@ class CerrarDia(tk.Toplevel):
         # Procesar los resultados de ventas y pagos
         id = ""
         for venta_id, total_venta, metodo_pago, valor in ventas_y_pagos:
+            print(valor)
             if id != venta_id:
                 self.tabla.insert('', 'end', values=[venta_id, self.formatear_pesos(total_venta)])
                 self.total_ventas += total_venta
