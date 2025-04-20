@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from conexion_base import ConexionBase
 import tkinter as tk
 
-class GestorEntradas(ctk.CTkToplevel):
+class GestorEntradas(tk.Toplevel):
     def __init__(self, parent_frame, actualizar_productos, usuario):
         super().__init__(parent_frame)
         self.master = parent_frame

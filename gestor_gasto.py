@@ -1,8 +1,8 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from conexion_base import ConexionBase
-
-class GestorDeGastos(ctk.CTkToplevel):
+import tkinter as tk
+class GestorDeGastos(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
         self.conexion = ConexionBase("tienda.db")

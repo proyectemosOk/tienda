@@ -1,8 +1,9 @@
 import sqlite3
 import customtkinter as ctk
 from conexion_base import ConexionBase
+import tkinter as tk
 
-class DatosApp(ctk.CTkToplevel):
+class DatosApp(tk.Toplevel):
     def __init__(self, root):
         super().__init__(root)
         self.db = ConexionBase("tienda.db")
