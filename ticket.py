@@ -4,7 +4,7 @@ import tkinter as tk
 from cargar_iconos import cargar_iconos
 from item import Item
 from generar_ticket import GeneradorTicket
-
+from conexion_base import *
 from imprimir import Imprimir
 from agregarScroll import AgregarScrollVerticar
 from nuevo_cliente import NuevoCliente
@@ -378,3 +378,33 @@ class TicketDeVenta:
     def seleccionar_transferencia(self):
         self.metodo_pago_var.set("Transferencia")
         self.metodos_pago["Transferencia"]["entry"].pack(padx=10, pady=10, fill="x", expand=True)
+
+if __name__ == "__main__":
+    # Crear la ventana principal
+    root = tk.Tk()
+    root.title("Sistema de Venta - Ticket")
+
+    # Crear la conexión a la base de datos
+    db = ConexionBase("tienda_jfleong6_1.db")
+
+    # Ejemplo de función para actualizar productos
+    def actualizar_productos():
+        print("Productos actualizados")
+
+    # Crear un objeto TicketDeVenta
+    ticket_venta = TicketDeVenta(
+        parent_frame=root,
+        usuario=1,  # Aquí pones el ID del usuario actual
+        iconos=cargar_iconos(),  # Suponiendo que esta función está definida
+        actulizar_productos=actualizar_productos,
+        db=db
+    )
+
+    # Crear algunos ejemplos de productos (items) y agregarlos al ticket
+    ticket_venta.agregar_item(id_producto=1, nombre="Producto 1", precio=10000, stock=10, icono=None)
+    ticket_venta.agregar_item(id_producto=2, nombre="Producto 2", precio=20000, stock=5, icono=None)
+
+
+
+    # Ejecutar la interfaz
+    root.mainloop()
