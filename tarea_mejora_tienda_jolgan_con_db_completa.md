@@ -1,7 +1,7 @@
 
 # 🛠️ Tarea de Mejora - `tienda.py` con `ConexionBase`
 
-## 👤 Asignado a: @Sebastián
+## 👤 Asignado a: @jolganpardo
 
 ## 📄 Descripción General
 
