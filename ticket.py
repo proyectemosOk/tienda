@@ -4,7 +4,7 @@ import tkinter as tk
 from cargar_iconos import cargar_iconos
 from item import Item
 from generar_ticket import GeneradorTicket
-from conexion_base import ConexionBase
+
 from imprimir import Imprimir
 from agregarScroll import AgregarScrollVerticar
 from nuevo_cliente import NuevoCliente
@@ -12,14 +12,14 @@ from nuevo_cliente import NuevoCliente
 from datetime import datetime
 
 class TicketDeVenta:
-    def __init__(self, parent_frame, usuario, iconos,actulizar_productos):
+    def __init__(self, parent_frame, usuario, iconos,actulizar_productos, db):
         self.parent_frame = parent_frame
         self.items = {}  # Diccionario para almacenar items en el formato {id: {"nombre": ..., "precio": ..., "cantidad": ...}}
         self.total = 0
         self.iconos = iconos
         self.actulizar_productos = actulizar_productos
         self.usuario = usuario
-        self.db = ConexionBase("tienda.db")
+        self.db = db
         self.datos = {i[0]:i[1] for i in self.db.seleccionar("datos","*")}
         self.generador_ticket = GeneradorTicket(self.datos)
         self.imprimir = Imprimir()

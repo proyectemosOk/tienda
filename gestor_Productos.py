@@ -11,12 +11,12 @@ from tkinter import simpledialog
 
 import random
 class GestorProductos(tk.Toplevel):
-    def __init__(self, parent_frame, actulizar_productos, usuario):
+    def __init__(self, parent_frame, actulizar_productos, usuario, tabla):
         super().__init__(parent_frame)
         self.actulizar_productos = actulizar_productos
         self.usuario = usuario
         self.parent_frame = parent_frame
-        self.db = ConexionBase("tienda.db")
+        self.db = ConexionBase(tabla)
          # Restaura la ventana al frente
         self.attributes("-topmost", True)
         # Frame principal
@@ -637,5 +637,5 @@ if __name__ == "__main__":
     root = ctk.CTk()
     ctk.set_appearance_mode("light")  # Opciones: "light", "dark", o "system"
     ctk.set_default_color_theme("blue")  # Tema de color: "blue", "green", "dark-blue"
-    gestor = GestorProductos(root, "", "1")
+    gestor = GestorProductos(root, "", "1", "tienda_jfleong6_1.db")
     root.mainloop()

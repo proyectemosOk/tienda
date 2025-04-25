@@ -7,8 +7,8 @@ def conectar_bd(nombre_bd):
     return sqlite3.connect(nombre_bd)
 
 # Función para crear las tablas
-def crear_tablas():
-    conexion = conectar_bd("tienda.db")
+def crear_tablas(base):
+    conexion = conectar_bd(base)
     cursor = conexion.cursor()
 
         # Crea la tabla de datos de la empresa
@@ -37,21 +37,11 @@ def crear_tablas():
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL UNIQUE,  -- UNIQUE para evitar duplicados
+        usuario TEXT NOT NULL UNIQUE,  -- UNIQUE para evitar duplicados
         contrasena TEXT NOT NULL,
         rol TEXT NOT NULL CHECK(rol IN ('admin', 'usuario'))
     )
     ''')
-
-    # Inserta un usuarios por defecto si no existe
-    usuarios = [('Admin', '4dm1n321', 'admin'),
-                ('ventas', 'ventas123', 'usuario')
-    ]
-    for dato in usuarios:
-        cursor.execute('''
-        INSERT OR IGNORE INTO usuarios (id, nombre, contrasena, rol) VALUES (Null, ?, ?, ?)
-        ''', dato)
-
 
     # Crear tabla de productos
     cursor.execute('''
@@ -413,43 +403,43 @@ def crear_tablas():
 
 
 # Ruta a tu archivo de credenciales Firebase
-firebase = ServicioFirebase("../proyectemosok-31150-firebase-adminsdk-fbsvc-fdae62578b.json")
+# firebase = ServicioFirebase("../proyectemosok-31150-firebase-adminsdk-fbsvc-fdae62578b.json")
 
-# Subir tipos a Firebase
-tipos = [
-    {"id": 1, "nombre": "PC"},
-    {"id": 2, "nombre": "Portátil"},
-    {"id": 3, "nombre": "Impresora"},
-    {"id": 4, "nombre": "Cámara"},
-    {"id": 5, "nombre": "DVR"}
-]
-for tipo in tipos:
-    doc_ref = firebase.db.collection("tipos").document(str(tipo["id"]))
-    if not doc_ref.get().exists:
-        doc_ref.set(tipo)
+# # Subir tipos a Firebase
+# tipos = [
+#     {"id": 1, "nombre": "PC"},
+#     {"id": 2, "nombre": "Portátil"},
+#     {"id": 3, "nombre": "Impresora"},
+#     {"id": 4, "nombre": "Cámara"},
+#     {"id": 5, "nombre": "DVR"}
+# ]
+# for tipo in tipos:
+#     doc_ref = firebase.db.collection("tipos").document(str(tipo["id"]))
+#     if not doc_ref.get().exists:
+#         doc_ref.set(tipo)
 
-# Subir servicios a Firebase
-servicios = [
-    {"id": 1, "nombre": "Mantenimiento"},
-    {"id": 2, "nombre": "Reparación"},
-    {"id": 3, "nombre": "Actualización"},
-    {"id": 4, "nombre": "Actualizar Hardware"}
-]
-for servicio in servicios:
-    doc_ref = firebase.db.collection("servicios").document(str(servicio["id"]))
-    if not doc_ref.get().exists:
-        doc_ref.set(servicio)
+# # Subir servicios a Firebase
+# servicios = [
+#     {"id": 1, "nombre": "Mantenimiento"},
+#     {"id": 2, "nombre": "Reparación"},
+#     {"id": 3, "nombre": "Actualización"},
+#     {"id": 4, "nombre": "Actualizar Hardware"}
+# ]
+# for servicio in servicios:
+#     doc_ref = firebase.db.collection("servicios").document(str(servicio["id"]))
+#     if not doc_ref.get().exists:
+#         doc_ref.set(servicio)
 
-# Subir tipos de pago
-tipos_pago = [
-    {"id": 1, "nombre": "EFECTIVO", "descripcion": "Pago en efectivo"},
-    {"id": 2, "nombre": "TRANSFERENCIA", "descripcion": "Transferencia bancaria"},
-    {"id": 3, "nombre": "TARGETA", "descripcion": "Pago con tarjeta de débito"}
-]
-for pago in tipos_pago:
-    doc_ref = firebase.db.collection("tipos_pago").document(str(pago["id"]))
-    if not doc_ref.get().exists:
-        doc_ref.set(pago)
+# # Subir tipos de pago
+# tipos_pago = [
+#     {"id": 1, "nombre": "EFECTIVO", "descripcion": "Pago en efectivo"},
+#     {"id": 2, "nombre": "TRANSFERENCIA", "descripcion": "Transferencia bancaria"},
+#     {"id": 3, "nombre": "TARGETA", "descripcion": "Pago con tarjeta de débito"}
+# ]
+# for pago in tipos_pago:
+#     doc_ref = firebase.db.collection("tipos_pago").document(str(pago["id"]))
+#     if not doc_ref.get().exists:
+#         doc_ref.set(pago)
 
 if __name__ == "__main__":
     crear_tablas()

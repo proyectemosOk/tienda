@@ -1,77 +1,61 @@
+# conexion_base.py
 import sqlite3
-from firebase_config import *
+from firebase_config import ServicioFirebase
+import bcrypt
+from crear_bd import crear_tablas
 class ConexionBase:
-    def __init__(self, nombre_bd):
+    def __init__(self, nombre_bd: str, ruta_credenciales_firebase: str = None):
         """
-        Inicializa la conexión a la base de datos.
+        Inicializa la conexión a la base de datos SQLite y, opcionalmente, a Firebase.
+        :param nombre_bd: Ruta a la base de datos SQLite.
+        :param ruta_credenciales_firebase: Ruta al archivo JSON de credenciales de Firebase.
         """
         self.nombre_bd = nombre_bd
-        self.firebase = ServicioFirebase("../proyectemosok-31150-firebase-adminsdk-fbsvc-fdae62578b.json")
+        self.firebase = None
+
+        if ruta_credenciales_firebase:
+            try:
+                self.firebase = ServicioFirebase(ruta_credenciales_firebase)
+                print(f"✅ Firebase conectado con: {ruta_credenciales_firebase}")
+            except Exception as e:
+                print(f"❌ Error al inicializar Firebase: {e}")
 
     def conectar(self):
-        """
-        Establece y devuelve la conexión a la base de datos.
-        """
         return sqlite3.connect(self.nombre_bd)
 
     def ejecutar_consulta(self, consulta, parametros=()):
-        """
-        Ejecuta una consulta genérica en la base de datos.
-        Retorna el ID generado si es un INSERT, o None en otros casos.
-        """
         conexion = self.conectar()
         cursor = conexion.cursor()
         try:
             cursor.execute(consulta, parametros)
             conexion.commit()
-            
-            # Detectamos si es una inserción y devolvemos el ID
             if consulta.strip().upper().startswith("INSERT"):
                 return cursor.lastrowid
-            else:
-                return None
-
+            return None
         except sqlite3.Error as e:
-            print(f"❌ Error al ejecutar la consulta: \n{consulta}\n{e}")
+            print(f"❌ Error al ejecutar consulta:\n{consulta}\n{e}")
             return None
         finally:
             conexion.close()
 
-
     def insertar(self, tabla, datos):
-        """
-        Inserta datos en la tabla especificada.
-        tabla: str - Nombre de la tabla.
-        datos: dict - Diccionario con los nombres de columnas y valores a insertar.
-        """
         columnas = ", ".join(datos.keys())
-        
         valores = tuple(datos.values())
-
         placeholders = ", ".join("?" for _ in datos)
-
         consulta = f"INSERT INTO {tabla} ({columnas}) VALUES ({placeholders})"
         id_generado = self.ejecutar_consulta(consulta, valores)
-        # --- Subir a Firebase si corresponde ---
-        if self.firebase and id_generado:
-            datos_con_id = datos.copy()
-            datos_con_id["id"] = id_generado
-            self.firebase.db.collection(tabla).document(str(id_generado)).set(datos_con_id)
-            print(f"🔥 Documento '{id_generado}' insertado en colección '{tabla}' de Firebase.")
 
-    
-    def existe_registro(self, tabla, columna, valor):
-        resultado = self.seleccionar(tabla, columnas=columna, condicion=f"{columna} = ?", parametros=(valor,))
-        return len(resultado) > 0
-    
+        if self.firebase and id_generado:
+            try:
+                datos_con_id = datos.copy()
+                datos_con_id["id"] = id_generado
+                self.firebase.db.collection(tabla).document(str(id_generado)).set(datos_con_id)
+                print(f"🔥 Documento '{id_generado}' insertado en Firebase colección '{tabla}'.")
+            except Exception as e:
+                print(f"⚠️ Error subiendo a Firebase: {e}")
+        return id_generado
+
     def seleccionar(self, tabla, columnas="*", condicion=None, parametros=()):
-        """
-        Selecciona datos de la tabla.
-        tabla: str - Nombre de la tabla.
-        columnas: str - Columnas a seleccionar, por defecto '*'.
-        condicion: str - Condición WHERE opcional.
-        parametros: tuple - Parámetros para la condición.
-        """
         consulta = f"SELECT {columnas} FROM {tabla}"
         if condicion:
             consulta += f" WHERE {condicion}"
@@ -81,48 +65,33 @@ class ConexionBase:
             cursor.execute(consulta, parametros)
             return cursor.fetchall()
         except sqlite3.Error as e:
-            print(f"Error al ejecutar SELECT: {e}")
+            print(f"❌ Error SELECT: {e}")
             return []
         finally:
             conexion.close()
 
+    def existe_registro(self, tabla, columna, valor):
+        return bool(self.seleccionar(tabla, columnas=columna, condicion=f"{columna} = ?", parametros=(valor,)))
+
     def actualizar(self, tabla, datos, condicion, parametros_condicion):
-        """
-        Actualiza datos en la tabla local y sincroniza con Firebase si corresponde.
-        """
         asignaciones = ", ".join(f"{col} = ?" for col in datos.keys())
         valores = tuple(datos.values())
         consulta = f"UPDATE {tabla} SET {asignaciones} WHERE {condicion}"
         self.ejecutar_consulta(consulta, valores + parametros_condicion)
 
-        # --- Sincronizar con Firebase ---
         if self.firebase:
-            # Suponemos que la condición es algo como: "id = ?"
-            # y que el primer parámetro en parametros_condicion es el ID del documento
             doc_id = str(parametros_condicion[0])
             try:
                 self.firebase.db.collection(tabla).document(doc_id).update(datos)
-                print(f"🔁 Documento '{doc_id}' actualizado en colección '{tabla}' de Firebase.")
+                print(f"🔁 Documento '{doc_id}' actualizado en Firebase colección '{tabla}'.")
             except Exception as e:
-                print(f"❌ Error al actualizar en Firebase: {tabla}: {e}")
+                print(f"⚠️ Error actualizando Firebase: {e}")
 
     def eliminar(self, tabla, condicion, parametros=()):
-        """
-        Elimina registros de la tabla según la condición.
-        tabla: str - Nombre de la tabla.
-        condicion: str - Condición WHERE.
-        parametros: tuple - Parámetros para la condición.
-        """
         consulta = f"DELETE FROM {tabla} WHERE {condicion}"
         self.ejecutar_consulta(consulta, parametros)
 
     def contar(self, tabla, condicion=None, parametros=()):
-        """
-        Cuenta registros en la tabla.
-        tabla: str - Nombre de la tabla.
-        condicion: str - Condición WHERE opcional.
-        parametros: tuple - Parámetros para la condición.
-        """
         consulta = f"SELECT COUNT(*) FROM {tabla}"
         if condicion:
             consulta += f" WHERE {condicion}"
@@ -132,38 +101,106 @@ class ConexionBase:
             cursor.execute(consulta, parametros)
             return cursor.fetchone()[0]
         except sqlite3.Error as e:
-            print(f"Error al contar registros: {e}")
+            print(f"❌ Error COUNT: {e}")
             return None
         finally:
             conexion.close()
 
     def ejecutar_personalizado(self, consulta, parametros=()):
-        """
-        Ejecuta una consulta personalizada y devuelve el resultado.
-        consulta: str - Consulta SQL.
-        parametros: tuple - Parámetros para la consulta.
-        """
         conexion = self.conectar()
         cursor = conexion.cursor()
-
         try:
-            
             cursor.execute(consulta, parametros)
-
             return cursor.fetchall()
         except sqlite3.Error as e:
-            print(f"Error al ejecutar consulta personalizada: {e}")
+            print(f"❌ Error consulta personalizada: {e}")
             return None
         finally:
             conexion.commit()
             conexion.close()
 
-    def existe_registro(self, tabla, columna, valor):
+    def validar_credenciales(self,tabla: str, usuario: str, contrasena: str) -> dict:
         """
-        Verifica si existe un registro en la tabla, usando el método ejecutar_personalizado.
-        Retorna True si existe al menos un resultado.
-        """
-        consulta = f"SELECT 1 FROM {tabla} WHERE {columna} = ? LIMIT 1"
-        resultado = self.ejecutar_personalizado(consulta, (valor,))
-        return bool(resultado)
+        Valida las credenciales del usuario contra la base de datos.
 
+        :param usuario: Usuario ingresado.
+        :param contrasena: Contraseña ingresada en texto claro.
+        :return: Diccionario con resultado de validación.
+        """
+        # resultado = self.seleccionar(tabla=tabla, columnas="id, contrasena, base_datos", condicion="usuario = ?", parametros=(usuario,))
+        resultado = self.seleccionar(tabla=tabla,columnas="id, contrasena, rol", condicion="usuario=?",parametros=(usuario,))
+        print(resultado)
+        if not resultado:
+            return {"valido": False, "mensaje": "Usuario no encontrado."}
+        
+        id_usuario, info, rol = resultado[0]
+
+        try:
+            if bcrypt.checkpw(contrasena.encode('utf-8'), info.encode('utf-8')):
+                return {
+                    "valido": True,
+                    "mensaje": "Login exitoso",
+                    "id_usuario": id_usuario,
+                    "rol": rol,
+                    "info": info
+                }
+            else:
+                return {"valido": False, "mensaje": "Contraseña incorrecta."}
+        except Exception as e:
+            return {"valido": False, "mensaje": f"Error validando contraseña: {str(e)}"}
+
+    def registrar_cliente_seguro(self, cliente_data: dict) -> dict:
+        """
+        Registra un nuevo cliente en la base principal y genera su base de datos personalizada.
+        
+        :param cliente_data: Diccionario con los campos necesarios del cliente.
+        :return: Diccionario con el resultado del registro.
+        """
+        try:
+            # Separar datos
+            email = cliente_data["email"]
+            parte_email = email.split('@')[0]
+            contrasena_hash = cliente_data["contrasena"]
+
+            # Insertar cliente (base_datos es temporal aquí)
+            cliente_data_temp = cliente_data.copy()
+            cliente_data_temp["base_datos"] = ""
+            cliente_data_temp["usuario"] = parte_email
+
+            id_cliente = self.insertar("clientes", cliente_data_temp)
+
+            # Crear nombre de base de datos personalizada
+            base_datos = f"tienda_{parte_email}_{id_cliente}.db"
+
+            # Actualizar cliente con base_datos real
+            self.actualizar(
+                tabla="clientes",
+                datos={"base_datos": base_datos},
+                condicion="id = ?",
+                parametros_condicion=(id_cliente,)
+            )
+
+            # Crear la nueva base de datos del cliente
+            crear_tablas(base_datos)
+
+            # Insertar al usuario admin en su propia base de datos
+            cliente_db = ConexionBase(base_datos)
+            usuario_admin = {
+                "usuario": parte_email,
+                "contrasena": contrasena_hash,
+                "rol": "admin"
+            }
+            cliente_db.insertar("usuarios", usuario_admin)
+
+            return {
+                "exito": True,
+                "usuario": parte_email,
+                "base_datos": base_datos,
+                "pass": contrasena_hash
+            }
+
+        except Exception as e:
+            return {
+                "exito": False,
+                "error": f"Error al registrar cliente: {str(e)}"
+            }

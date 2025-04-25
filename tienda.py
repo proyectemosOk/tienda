@@ -17,7 +17,7 @@ from cierre_dia import CerrarDia
 from entregas_diaria import EntregaDiaria
 import time
 class InterfazPrincipal:
-    def __init__(self, master, menu, ventanda_principal):
+    def __init__(self, master, menu, ventanda_principal, tabla):
         """
         fondo = #008ADF
         """
@@ -32,7 +32,7 @@ class InterfazPrincipal:
         self.style.configure('background.TFrame', background="#008ADF")
         self.master = master
         self.master_principal = ventanda_principal
-
+        self.tabla = tabla
         self.ancho_pantalla = self.master.winfo_screenwidth() 
         self.alto_pantalla = self.master.winfo_screenheight()
 
@@ -44,9 +44,8 @@ class InterfazPrincipal:
         self.img_productos = cargar_iconos("img_productos")
         ctk.set_appearance_mode("light")  # Opciones: "light", "dark", o "system"
         ctk.set_default_color_theme("blue")  # Tema de color: "blue", "green", "dark-blue"
-        # Base de datos
-        crear_bd.crear_tablas()
-        self.db = ConexionBase("tienda.db")
+    
+        self.db = ConexionBase(tabla)
         self.interfaz_ventas("1")
         self.master.bind_all('<F5>',self.actulizar_productos)
 
@@ -64,7 +63,7 @@ class InterfazPrincipal:
         frame_productos.pack(side="left", expand=True, fill="both")
         self.frame_ticket.pack(side="right", fill="y")
 
-        self.ticket = TicketDeVenta(self.frame_ticket, self.usuario, self.iconos, self.actulizar_productos)
+        self.ticket = TicketDeVenta(self.frame_ticket, self.usuario, self.iconos, self.actulizar_productos, self.db)
         
         frame_buscar_productos = tk.Frame(frame_productos,bg="white")
         frame_ver_productos = tk.Frame(frame_productos,bg="white")        
@@ -150,10 +149,10 @@ class InterfazPrincipal:
     
     def gestor_productos(self):
 
-        GestorProductos(self.master, self.actulizar_productos, self.usuario)
+        GestorProductos(self.master, self.actulizar_productos, self.usuario, self.tabla)
 
     def gestor_entradas(self):
-        GestorEntradas(self.master, self.actulizar_productos, self.usuario)
+        GestorEntradas(self.master, self.actulizar_productos, self.usuario, self.tabla)
     
     def gestor_gastos(self):
         GestorDeGastos(self.master)        
@@ -191,3 +190,20 @@ class InterfazPrincipal:
                 filtrada.append(productos)
         
         return filtrada
+
+if __name__ == "__main__":
+    # Crear la ventana principal
+    root = tk.Tk()
+    root.title("Interfaz Principal Tienda")
+    
+    # Crear la barra de menú
+    menu = tk.Menu(root)
+    
+    # Crear la interfaz principal y pasarle la ventana raíz y el menú
+    interfaz = InterfazPrincipal(root, menu, root, "tienda_jfleong6_1.db")
+    
+    # Configurar el tamaño de la ventana principal
+    root.geometry(f"{interfaz.ancho_pantalla}x{interfaz.alto_pantalla}")
+    
+    # Ejecutar la aplicación
+    root.mainloop()

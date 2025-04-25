@@ -5,13 +5,13 @@ from conexion_base import ConexionBase
 import tkinter as tk
 
 class GestorEntradas(tk.Toplevel):
-    def __init__(self, parent_frame, actualizar_productos, usuario):
+    def __init__(self, parent_frame, actualizar_productos, usuario, tabla):
         super().__init__(parent_frame)
         self.master = parent_frame
         self.title("Gestor de Entradas por Proveedor")
         self.actualizar_productos = actualizar_productos
         self.usuario = usuario
-        self.db = ConexionBase("tienda.db")
+        self.db = ConexionBase(tabla)
         
         # Frame principal
         self.main_frame = ctk.CTkFrame(self)
@@ -149,7 +149,6 @@ class GestorEntradas(tk.Toplevel):
         except Exception as e:
             self.attributes("-topmost", False)
             messagebox.showerror("Error", f"No se pudo registrar el proveedor: {str(e)}")
-
         
     def _crear_frame_factura(self):
         # Frame para datos de factura
@@ -501,6 +500,6 @@ if __name__ == "__main__":
     root = ctk.CTk()
     ctk.set_appearance_mode("light")  # Opciones: "light", "dark", o "system"
     ctk.set_default_color_theme("blue")  # Tema de color: "blue", "green", "dark-blue"
-    gestor = GestorEntradas(root,actulizar,"1")
+    gestor = GestorEntradas(root,actulizar,"1", "tienda_jfleong6_1.db")
 
     root.mainloop()
