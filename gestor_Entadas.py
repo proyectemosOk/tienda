@@ -66,7 +66,7 @@ class GestorEntradas(tk.Toplevel):
         self.titulo_label.grid(row=0, column=0, sticky="ew", padx=10, pady=(10, 20))
 
         self._crear_frame_busqueda()
-        self._crear_frame_factura()
+        self._crear_frame_factura() 
         self._crear_frame_productos()
         self._crear_tabla_productos()
         self._cargar_categorias()
