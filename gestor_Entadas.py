@@ -438,7 +438,7 @@ class GestorEntradas(tk.Toplevel):
         
         # Primera fila - Búsqueda de producto
         search_prod_frame = ctk.CTkFrame(self.productos_frame, fg_color="transparent")
-        search_prod_frame.grid(row=2, column=0, columnspan=7, sticky="ew", padx=10, pady=5)
+        search_prod_frame.grid(row=2, column=0, columnspan=6, sticky="ew", padx=10, pady=5)
         
         ctk.CTkLabel(search_prod_frame, text="Buscar producto:", font=ctk.CTkFont(size=12)).pack(side="left", padx=5)
         self.buscar_multi_entry = ctk.CTkEntry(
