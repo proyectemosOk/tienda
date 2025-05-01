@@ -24,33 +24,12 @@ class GestorEntradas(tk.Toplevel):
         self.color_borde = "#E2E8F0"
 
         # Configuración principal de la ventana
-        self.geometry("1100x750")
+        # self.geometry("1100x750")
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         ctk.set_appearance_mode("light")
 
-        # === CONTENEDOR PRINCIPAL CON SCROLL ===
-        self.canvas = tk.Canvas(self, bg=self.color_fondo, highlightthickness=0)
-        self.canvas.grid(row=0, column=0, sticky="nsew")
-
-        self.scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
-        self.scrollbar.grid(row=0, column=1, sticky="ns")
-
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
-
-        self.scrollable_frame = ctk.CTkFrame(self.canvas, fg_color=self.color_fondo)
-        self.scrollable_window = self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-
-        self.scrollable_frame.bind(
-            "<Configure>",
-            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-        )
-
-        self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfig(self.scrollable_window, width=e.width))
-
-        self._configurar_scroll_mouse()
-
-        self.main_frame = ctk.CTkFrame(self.scrollable_frame, fg_color=self.color_fondo, corner_radius=15)
+        self.main_frame = ctk.CTkFrame(self, fg_color=self.color_fondo, corner_radius=15)
         self.main_frame.pack(padx=20, pady=20, fill="both", expand=True)
 
         for i in range(6):
@@ -71,7 +50,7 @@ class GestorEntradas(tk.Toplevel):
         self._crear_tabla_productos()
         self._cargar_categorias()
         self._cargar_unidades()
-
+        self._crear_btn_principales()
         self._configurar_estilo_tabla()
 
         self.proveedor_entry.bind("<Return>", lambda e: self.buscar_proveedor())
@@ -80,7 +59,46 @@ class GestorEntradas(tk.Toplevel):
         self.adelante_ventana()
         self.deiconify()
         self.codigo_producto_entry.focus_force()
-
+    
+    def _crear_btn_principales(self):
+        frame_botones = ctk.CTkFrame(self.main_frame,fg_color="transparent")
+        frame_botones.grid(row=5, column=0, pady=5, sticky="ew")
+        # Botón para siguiente y atras
+        self.btn_siguiente = ctk.CTkButton(
+            frame_botones,
+            text="⏩ Siguiente",
+            command=self.siguiente_frame_productos,
+            fg_color="#4CAF50",
+            hover_color="#45a049"
+        )
+        self.btn_siguiente.pack(side="left", fill="x", padx =5, expand="true")
+        
+        # Botón finalizar entrada
+        self.btn_finalizar = ctk.CTkButton(
+            frame_botones,
+            text="Finalizar factura",
+            command=self.finalizar_entrada,
+            fg_color="#4CAF50",
+            hover_color="#45a049"
+        )
+        # self.btn_finalizar.pack(side="left", fill="x", expand="true", padx =5)
+    
+    def siguiente_frame_productos(self):
+        self.btn_siguiente.pack(expand="false")
+        self.btn_siguiente.configure(command = self.atras, text= "⏪ Volver")
+        self.btn_finalizar.pack(side="left", fill="x", expand="true", padx =5)
+        self.search_frame.grid_forget()
+        self.factura_frame.grid_forget()
+        self.productos_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=10)
+        self.table_frame.grid(row=4, column=0, sticky="nsew", padx=5, pady=5)
+    def atras(self):
+        self.btn_siguiente.pack(expand="true")
+        self.btn_siguiente.configure(command = self.siguiente_frame_productos, text= "⏩ Siguiente")
+        self.btn_finalizar.pack_forget()
+        self.search_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
+        self.factura_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
+        self.productos_frame.grid_forget()
+        self.table_frame.grid_forget()
     def _configurar_scroll_mouse(self):
         def _on_mousewheel(event):
             if event.delta > 0:
@@ -114,7 +132,7 @@ class GestorEntradas(tk.Toplevel):
         # Configurar el estilo del encabezado
         style.configure("Treeview.Heading",
                          background=self.color_primario,
-                         foreground="white",
+                         foreground="black",
                          relief="flat",
                          font=('Arial', 10, 'bold'))
         
@@ -136,13 +154,13 @@ class GestorEntradas(tk.Toplevel):
     
     def _crear_frame_busqueda(self):
         # Frame para búsqueda de proveedor con mejor diseño
-        search_frame = ctk.CTkFrame(self.main_frame, corner_radius=10, fg_color="#FFFFFF", border_width=1, border_color=self.color_borde)
-        search_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
-        search_frame.grid_columnconfigure(1, weight=1)
+        self.search_frame = ctk.CTkFrame(self.main_frame, corner_radius=10, fg_color="#FFFFFF", border_width=1, border_color=self.color_borde)
+        self.search_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
+        self.search_frame.grid_columnconfigure(1, weight=1)
         
         # Título de sección
         titulo_seccion = ctk.CTkLabel(
-            search_frame, 
+            self.search_frame, 
             text="DATOS DEL PROVEEDOR", 
             font=ctk.CTkFont(size=14, weight="bold"),
             text_color=self.color_primario
@@ -150,22 +168,22 @@ class GestorEntradas(tk.Toplevel):
         titulo_seccion.grid(row=0, column=0, columnspan=3, sticky="w", padx=15, pady=(10, 5))
         
         # Separador
-        separator = ctk.CTkFrame(search_frame, height=2, fg_color=self.color_borde)
+        separator = ctk.CTkFrame(self.search_frame, height=2, fg_color=self.color_borde)
         separator.grid(row=1, column=0, columnspan=3, sticky="ew", padx=10, pady=(0, 10))
         
         # Búsqueda de proveedor con mejor diseño
-        ctk.CTkLabel(search_frame, text="Proveedor:", font=ctk.CTkFont(size=12)).grid(row=2, column=0, sticky="w", padx=15, pady=5)
+        ctk.CTkLabel(self.search_frame, text="Proveedor:", font=ctk.CTkFont(size=12)).grid(row=2, column=0, sticky="w", padx=15, pady=5)
         self.proveedor_entry = ctk.CTkEntry(
-            search_frame, 
+            self.search_frame, 
             width=200, 
             placeholder_text="Ingrese código o nombre...",
             border_color=self.color_borde,
             corner_radius=8
         )
-        self.proveedor_entry.grid(row=2, column=1, sticky="w", padx=5, pady=5 ) 
+        self.proveedor_entry.grid(row=2, column=1, sticky="ew", padx=5, pady=5 ) 
         
         ctk.CTkButton(
-            search_frame,
+            self.search_frame,
             text="Buscar",
             command=self.buscar_proveedor,
             fg_color=self.color_primario,
@@ -176,7 +194,7 @@ class GestorEntradas(tk.Toplevel):
         ).grid(row=2, column=2, sticky="w", padx=15, pady=5)
         
         self.nombre_proveedor_label = ctk.CTkLabel(
-            search_frame, 
+            self.search_frame, 
             text="",
             font=ctk.CTkFont(size=12, weight="bold"),
             text_color=self.color_primario
@@ -184,7 +202,7 @@ class GestorEntradas(tk.Toplevel):
         self.nombre_proveedor_label.grid(row=3, column=0, columnspan=3, sticky="w", padx=15, pady=(5, 10))
     
     def mostrar_toplevel_proveedor(self, callback):
-        self.top_interfaz_proovedor = ctk.CTkToplevel(self)
+        self.top_interfaz_proovedor = tk.Toplevel(self)
         self.top_interfaz_proovedor.title("Registrar Nuevo Proveedor")
         self.top_interfaz_proovedor.attributes("-topmost", True)
         self.top_interfaz_proovedor.grid_rowconfigure(0, weight=1)
@@ -297,13 +315,13 @@ class GestorEntradas(tk.Toplevel):
         
     def _crear_frame_factura(self):
         # Frame para datos de factura con mejor diseño
-        factura_frame = ctk.CTkFrame(self.main_frame, corner_radius=10, fg_color="#FFFFFF", border_width=1, border_color=self.color_borde)
-        factura_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
-        factura_frame.grid_columnconfigure(1, weight=1)
+        self.factura_frame = ctk.CTkFrame(self.main_frame, corner_radius=10, fg_color="#FFFFFF", border_width=1, border_color=self.color_borde)
+        self.factura_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
+        self.factura_frame.grid_columnconfigure(1, weight=1)
         
         # Título de sección
         titulo_seccion = ctk.CTkLabel(
-            factura_frame, 
+            self.factura_frame, 
             text="DATOS DE LA FACTURA", 
             font=ctk.CTkFont(size=14, weight="bold"),
             text_color=self.color_primario
@@ -311,54 +329,53 @@ class GestorEntradas(tk.Toplevel):
         titulo_seccion.grid(row=0, column=0, columnspan=6, sticky="w", padx=15, pady=(10, 5))
         
         # Separador
-        separator = ctk.CTkFrame(factura_frame, height=2, fg_color=self.color_borde)
+        separator = ctk.CTkFrame(self.factura_frame, height=2, fg_color=self.color_borde)
         separator.grid(row=1, column=0, columnspan=7, sticky="ew", padx=10, pady=(0, 10))
         
         # Primera fila con mejor diseño
-        ctk.CTkLabel(factura_frame, text="N° Factura:", font=ctk.CTkFont(size=12)).grid(row=2, column=0, sticky="w", padx=15, pady=5)
+        ctk.CTkLabel(self.factura_frame, text="N° Factura:", font=ctk.CTkFont(size=12)).grid(row=2, column=0, sticky="w", padx=15, pady=5)
         self.factura_entry = ctk.CTkEntry(
-            factura_frame, 
+            self.factura_frame, 
             width=150, 
             corner_radius=8,
             border_color=self.color_borde
         )
-        self.factura_entry.grid(row=2, column=1, sticky="w", padx=5, pady=5)
+        self.factura_entry.grid(row=2, column=1, sticky="ew", padx=5, pady=5)
         
-        ctk.CTkLabel(factura_frame, text="Fecha Emisión:", font=ctk.CTkFont(size=12)).grid(row=2, column=2, sticky="w", padx=15, pady=5)
+        ctk.CTkLabel(self.factura_frame, text="Fecha Emisión:", font=ctk.CTkFont(size=12)).grid(row=2, column=2, sticky="w", padx=15, pady=5)
         self.fecha_emision_entry = ctk.CTkEntry(
-            factura_frame, 
+            self.factura_frame, 
             width=120,
             corner_radius=8,
             border_color=self.color_borde
         )
-        self.fecha_emision_entry.grid(row=2, column=3, sticky="w", padx=5, pady=5)
+        self.fecha_emision_entry.grid(row=2, column=3, sticky="ew", padx=5, pady=5)
         self.fecha_emision_entry.insert(0, datetime.now().strftime("%Y-%m-%d"))
         
-        ctk.CTkLabel(factura_frame, text="Fecha Vencimiento:", font=ctk.CTkFont(size=12)).grid(row=2, column=4, sticky="w", padx=15, pady=5)
+        ctk.CTkLabel(self.factura_frame, text="Fecha Vencimiento:", font=ctk.CTkFont(size=12)).grid(row=2, column=4, padx=(2, 0), pady=5)
         self.fecha_vencimiento_entry = ctk.CTkEntry(
-            factura_frame, 
+            self.factura_frame, 
             width=120,
             corner_radius=8,
             border_color=self.color_borde
         )
-        self.fecha_vencimiento_entry.grid(row=2, column=5, sticky="w", padx=5, pady=5)
+        self.fecha_vencimiento_entry.grid(row=2, column=5, columnspan=2, sticky="ew", padx=5, pady=5)
         self.fecha_vencimiento_entry.insert(0, (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"))
         
         # Segunda fila con mejor diseño
-        ctk.CTkLabel(factura_frame, text="Tipo de Pago:", font=ctk.CTkFont(size=12)).grid(row=3, column=0, sticky="w", padx=15, pady=(15, 5))
+        ctk.CTkLabel(self.factura_frame, text="Tipo de Pago:", font=ctk.CTkFont(size=12)).grid(row=3, column=0, sticky="w", padx=15, pady=(15, 5))
         self.tipo_pago_combo = ctk.CTkComboBox(
-            factura_frame, 
+            self.factura_frame, 
             values=self._obtener_tipos_pago(), 
-            width=150,
             corner_radius=8,
             border_color=self.color_borde,
             dropdown_hover_color=self.color_primario
         )
-        self.tipo_pago_combo.grid(row=3, column=1, sticky="w", padx=5, pady=(15, 5))
+        self.tipo_pago_combo.grid(row=3, column=1, sticky="ew", padx=5, pady=(15, 5))
         
-        ctk.CTkLabel(factura_frame, text="Monto Pagado:", font=ctk.CTkFont(size=12)).grid(row=3, column=2, sticky="w", padx=15, pady=(15, 5))
+        ctk.CTkLabel(self.factura_frame, text="Monto Pagado:", font=ctk.CTkFont(size=12)).grid(row=3, column=2, sticky="w", padx=15, pady=(15, 5))
         self.monto_pagado_entry = ctk.CTkEntry(
-            factura_frame, 
+            self.factura_frame, 
             width=120,
             corner_radius=8,
             border_color=self.color_borde
@@ -366,8 +383,8 @@ class GestorEntradas(tk.Toplevel):
         self.monto_pagado_entry.grid(row=3, column=3, sticky="w", padx=5, pady=(15, 5))
         
         # Estado de pago con mejor diseño
-        estado_frame = ctk.CTkFrame(factura_frame, fg_color="transparent")
-        estado_frame.grid(row=3, column=4, columnspan=2, sticky="w", padx=15, pady=(15, 5))
+        estado_frame = ctk.CTkFrame(self.factura_frame, fg_color="transparent")
+        estado_frame.grid(row=3, column=4, columnspan=3, sticky="ew", padx=15, pady=(15, 5))
         
         self.estado_pago_var = tk.StringVar(value="PENDIENTE")
         
@@ -402,13 +419,13 @@ class GestorEntradas(tk.Toplevel):
         
     def _crear_frame_productos(self):
         # Frame para entrada de productos con mejor diseño
-        productos_frame = ctk.CTkFrame(self.main_frame, corner_radius=10, fg_color="#FFFFFF", border_width=1, border_color=self.color_borde)
-        productos_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=10)
-        productos_frame.grid_columnconfigure(1, weight=1)
+        self.productos_frame = ctk.CTkFrame(self.main_frame, corner_radius=10, fg_color="#FFFFFF", border_width=1, border_color=self.color_borde)
+        # self.productos_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=10)
+        self.productos_frame.grid_columnconfigure(1, weight=1)
         
         # Título de sección
         titulo_seccion = ctk.CTkLabel(
-            productos_frame, 
+            self.productos_frame, 
             text="PRODUCTOS", 
             font=ctk.CTkFont(size=14, weight="bold"),
             text_color=self.color_primario
@@ -416,11 +433,11 @@ class GestorEntradas(tk.Toplevel):
         titulo_seccion.grid(row=0, column=0, columnspan=7, sticky="w", padx=15, pady=(10, 5))
         
         # Separador
-        separator = ctk.CTkFrame(productos_frame, height=2, fg_color=self.color_borde)
+        separator = ctk.CTkFrame(self.productos_frame, height=2, fg_color=self.color_borde)
         separator.grid(row=1, column=0, columnspan=7, sticky="ew", padx=10, pady=(0, 10))
         
         # Primera fila - Búsqueda de producto
-        search_prod_frame = ctk.CTkFrame(productos_frame, fg_color="transparent")
+        search_prod_frame = ctk.CTkFrame(self.productos_frame, fg_color="transparent")
         search_prod_frame.grid(row=2, column=0, columnspan=7, sticky="ew", padx=10, pady=5)
         
         ctk.CTkLabel(search_prod_frame, text="Buscar producto:", font=ctk.CTkFont(size=12)).pack(side="left", padx=5)
@@ -431,7 +448,7 @@ class GestorEntradas(tk.Toplevel):
             corner_radius=8,
             border_color=self.color_borde
         )
-        self.buscar_multi_entry.pack(side="left", padx=5)
+        self.buscar_multi_entry.pack(side="left", padx=5,fill="x", expand="true")
         self.buscar_multi_entry.bind('<Return>', self.buscar_producto_multicampo)
         
         ctk.CTkButton(
@@ -441,15 +458,13 @@ class GestorEntradas(tk.Toplevel):
             fg_color=self.color_primario,
             hover_color=self.color_secundario,
             corner_radius=8,
-            height=30,
-            width=100,
             font=ctk.CTkFont(size=12, weight="bold")
         ).pack(side="left", padx=10)
         
         # Detalles del producto
-        detalles_frame = ctk.CTkFrame(productos_frame, fg_color="transparent")
+        detalles_frame = ctk.CTkFrame(self.productos_frame, fg_color="transparent")
         detalles_frame.grid(row=3, column=0, columnspan=7, sticky="ew", padx=15, pady=(10, 5))
-        detalles_frame.grid_columnconfigure(1, weight=1)
+        # detalles_frame.grid_columnconfigure(1, weight=1)
         
         # Primera fila de detalles
         ctk.CTkLabel(detalles_frame, text="Código Producto:", font=ctk.CTkFont(size=12)).grid(row=0, column=0, sticky="w", padx=(0, 5), pady=5)
@@ -459,23 +474,20 @@ class GestorEntradas(tk.Toplevel):
             corner_radius=8,
             border_color=self.color_borde
         )
-        self.codigo_producto_entry.grid(row=0, column=1, sticky="w", padx=5, pady=5)
+        self.codigo_producto_entry.grid(row=0, column=1, sticky="ew", padx=5, pady=5, columnspan=2)
         self.codigo_producto_entry.bind('<Return>', self.buscar_producto)
         
-        ctk.CTkLabel(detalles_frame, text="Nombre:", font=ctk.CTkFont(size=12)).grid(row=0, column=2, sticky="w", padx=15, pady=5)
+        ctk.CTkLabel(detalles_frame, text="Nombre:", font=ctk.CTkFont(size=12)).grid(row=0, column=3, sticky="w", padx=15, pady=5)
         self.nombre_producto_label = ctk.CTkEntry(
-            detalles_frame, 
-            state="readonly",
-            width=250,
+            detalles_frame,
             corner_radius=8
         )
-        self.nombre_producto_label.grid(row=0, column=3, sticky="w", padx=5, pady=5, columnspan=3)
+        self.nombre_producto_label.grid(row=0, column=4, sticky="ew", padx=5, pady=5, columnspan=3)
         
         # Segunda fila de detalles
         ctk.CTkLabel(detalles_frame, text="Cantidad:", font=ctk.CTkFont(size=12)).grid(row=1, column=0, sticky="w", padx=(0, 5), pady=5)
         self.cantidad_entry = ctk.CTkEntry(
             detalles_frame, 
-            width=100,
             corner_radius=8,
             border_color=self.color_borde
         )
@@ -500,7 +512,7 @@ class GestorEntradas(tk.Toplevel):
         self.precio_venta_entry.grid(row=1, column=5, sticky="w", padx=5, pady=5)
         
         ctk.CTkButton(
-            productos_frame,
+            detalles_frame,
             text="Agregar Producto",
             command=self.agregar_producto_lista,
             fg_color=self.color_primario, 
@@ -508,7 +520,7 @@ class GestorEntradas(tk.Toplevel):
             corner_radius=8,
             height=35,
             font=ctk.CTkFont(size=12, weight="bold")
-        ).grid(row=4, column=0, columnspan=7, sticky="e", padx=15, pady=10)
+        ).grid(row=1, column=6, sticky="w", padx=5, pady=5)
 
     def buscar_producto_multicampo(self, event=None):
         busqueda = self.buscar_multi_entry.get().strip()
@@ -524,17 +536,21 @@ class GestorEntradas(tk.Toplevel):
             if respuesta:
                 self.agregar_producto_lista_1()
         else:
-            self.agregar_producto_lista_1()
+            self.codigo_producto_entry.delete(0, 'end')
+            self.codigo_producto_entry.insert(0, producto[0][1])
+            self.buscar_producto()
+            self.cantidad_entry.focus()
+    
     def _crear_tabla_productos(self):
         # Frame para la tabla usando grid
-        table_frame = ctk.CTkFrame(self.main_frame)
-        table_frame.grid(row=4, column=0, sticky="nsew", padx=5, pady=5)
-        table_frame.grid_rowconfigure(0, weight=1)
-        table_frame.grid_columnconfigure(0, weight=1)
+        self.table_frame = ctk.CTkFrame(self.main_frame)
+        # self.table_frame.grid(row=4, column=0, sticky="nsew", padx=5, pady=5)
+        self.table_frame.grid_rowconfigure(0, weight=1)
+        self.table_frame.grid_columnconfigure(0, weight=1)
         
         # Crear Treeview
         columns = ('Código', 'Nombre', 'Cantidad', 'Precio Compra', 'Precio Venta', 'Subtotal')
-        self.tabla = ttk.Treeview(table_frame, columns=columns, show='headings')
+        self.tabla = ttk.Treeview(self.table_frame, columns=columns, show='headings')
         
         # Configurar columnas
         col_widths = [100, 200, 80, 100, 100, 100]
@@ -543,24 +559,15 @@ class GestorEntradas(tk.Toplevel):
             self.tabla.column(col, width=width, anchor='center')
         
         # Scrollbars
-        scroll_y = ttk.Scrollbar(table_frame, orient='vertical', command=self.tabla.yview)
+        scroll_y = ttk.Scrollbar(self.table_frame, orient='vertical', command=self.tabla.yview)
         scroll_y.grid(row=0, column=1, sticky="ns")
         self.tabla.configure(yscrollcommand=scroll_y.set)
         
-        scroll_x = ttk.Scrollbar(table_frame, orient='horizontal', command=self.tabla.xview)
+        scroll_x = ttk.Scrollbar(self.table_frame, orient='horizontal', command=self.tabla.xview)
         scroll_x.grid(row=1, column=0, sticky="ew")
         self.tabla.configure(xscrollcommand=scroll_x.set)
         
-        self.tabla.grid(row=0, column=0, sticky="nsew")
-        
-        # Botón para finalizar entrada
-        ctk.CTkButton(
-            self.main_frame,
-            text="Finalizar Entrada",
-            command=self.finalizar_entrada,
-            fg_color="#4CAF50",
-            hover_color="#45a049"
-        ).grid(row=5, column=0, pady=5, sticky="ew")
+        self.tabla.grid(row=0, column=0, sticky="nsew")    
 
     def _obtener_tipos_pago(self):
         tipos = self.db.seleccionar("tipos_pago", "nombre")
@@ -603,7 +610,7 @@ class GestorEntradas(tk.Toplevel):
         # Crear Toplevel
         self.attributes("-topmost", False)
         
-        top = ctk.CTkToplevel(self)
+        top = tk.Toplevel(self)
         top.title("Datos del Producto")
         top.attributes("-topmost", True)
         
@@ -710,6 +717,7 @@ class GestorEntradas(tk.Toplevel):
             self.attributes("-topmost", False)
             messagebox.showerror("Error", "Por favor complete todos los campos correctamente")
             self.adelante_ventana()
+    
     def limpiar_formulario(self):
         # Limpiar campos
         self.codigo_producto_entry.delete(0, 'end')
@@ -718,6 +726,7 @@ class GestorEntradas(tk.Toplevel):
         self.precio_venta_entry.delete(0, 'end')
         self.precio_compra_entry.delete(0, 'end')
         self.codigo_producto_entry.focus()
+    
     def finalizar_entrada(self):
         try:
             self.buscar_proveedor()
