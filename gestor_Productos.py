@@ -194,6 +194,7 @@ class GestorProductos(tk.Toplevel):
             hover_color="#455A64"
         )
         self.limpiar_btn.pack(side="left", padx=5)
+    
     def _desplegar_combobox(self, event):
         print("hola")
         widget = event.widget
