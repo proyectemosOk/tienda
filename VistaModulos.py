@@ -14,9 +14,9 @@ class VistaModulos():
         }
         # Etiquetas 
         self.Etiquetas = [
-            "####",
-            "####",
-            "####",
+            "Ventas",
+            "Inventario",
+            "Gastos",
             "####",
             "####",
             "####",
